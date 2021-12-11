@@ -1,6 +1,8 @@
 # Log4j2-RCE-burp-plugin
-Log4j2 burp检测插件，基于python
+Log4j2 burp检测插件，基于python2.7，被动式扫描
+
 请自行修改文件内的ceye.io地址和token
+
 能对post，get以及cookie中的参数进行检测
 
 ## About Next：
