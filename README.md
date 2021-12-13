@@ -7,9 +7,11 @@ Log4j2 burp检测插件，基于python2.7，被动式扫描
 
 ## About Next：
 
-1、调用ceye检测---->调用*Burp* Collaborator
+1、调用ceye检测---->调用*Burp* Collaborator[√]
 
 2、payload检测---->bypass能力
+
+[2021.12.13]第一次更新，嘿嘿，成功替换为burp内置dnslog，无需额外配置ceye.io，可直接导入使用
 
 持续更新中......
 
